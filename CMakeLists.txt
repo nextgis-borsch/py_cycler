@@ -46,14 +46,12 @@ else()
     set(INSTALL_LIB_DIR "." CACHE INTERNAL "Installation directory for libraries" FORCE)
 endif()
 
-# Hack, not find python3 withouut this
-find_program(PYTHON3_EXECUTABLE python3)
-set(PYTHON_EXECUTABLE ${PYTHON3_EXECUTABLE})
-
-find_package(PythonInterp 3)
-if(NOT PYTHONINTERP_FOUND OR NOT PYTHON_EXECUTABLE)
-	message(WARNING "Cannot find python 3")
+find_package(Python3 COMPONENTS Interpreter)
+if(NOT Python3_FOUND)
+	message(FATAL_ERROR "Cannot find python 3")
 endif()
+
+set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 
 file(DOWNLOAD "https://pypi.python.org/pypi/${PROJECT_NAME}/json" "${CMAKE_CURRENT_BINARY_DIR}/meta.json")
 
@@ -71,35 +69,6 @@ list(GET PACKAGE_DETAILS 1 VERSION)
 list(GET PACKAGE_DETAILS 2 PROJECT_CPACK_FILENAME)
 
 report_version(${PROJECT_NAME} ${VERSION})
-
-if(OSX_FRAMEWORK)
-    set(FLAGS "ARCHFLAGS=-arch x86_64")
-elseif(WIN32)
-    if(MSVC_VERSION EQUAL 1400)
-        set(FLAGS ${FLAGS} "VS90COMNTOOLS=$ENV{VS80COMNTOOLS}")
-    elseif(MSVC_VERSION EQUAL 1500)
-        set(FLAGS ${FLAGS} "VS90COMNTOOLS=$ENV{VS90COMNTOOLS}")
-    elseif(MSVC_VERSION EQUAL 1600)
-        set(FLAGS ${FLAGS} "VS90COMNTOOLS=$ENV{VS100COMNTOOLS}")
-    elseif(MSVC_VERSION EQUAL 1700)
-        set(FLAGS ${FLAGS} "VS90COMNTOOLS=$ENV{VS110COMNTOOLS}")
-    elseif(MSVC_VERSION EQUAL 1800)
-        set(FLAGS ${FLAGS} "VS90COMNTOOLS=$ENV{VS120COMNTOOLS}")
-    elseif(MSVC_VERSION EQUAL 1900)
-        set(FLAGS ${FLAGS} "VS90COMNTOOLS=$ENV{VS140COMNTOOLS}")
-    else() # 1912 - Need to copy vcvarsall.bat from VC\Auxiliary\Build to VC
-        get_filename_component(_COMNTOOLS_PREFIX "${CMAKE_C_COMPILER}" PATH)
-        get_filename_component(_COMNTOOLS_PREFIX "${_COMNTOOLS_PREFIX}" PATH)
-        get_filename_component(_COMNTOOLS_PREFIX "${_COMNTOOLS_PREFIX}" PATH)
-        get_filename_component(_COMNTOOLS_PREFIX "${_COMNTOOLS_PREFIX}" PATH)
-        get_filename_component(_COMNTOOLS_PREFIX "${_COMNTOOLS_PREFIX}" PATH)
-        get_filename_component(_COMNTOOLS_PREFIX "${_COMNTOOLS_PREFIX}" PATH)
-        # get_filename_component(_COMNTOOLS_PREFIX "${_COMNTOOLS_PREFIX}" PATH)
-        set(FLAGS ${FLAGS} "VS90COMNTOOLS=${_COMNTOOLS_PREFIX}")
-    endif()
-else()
-    set(FLAGS "NextGIS=TRUE")
-endif()
 
 # Download tarbal
 set(OUT_DIR_NAME ${PROJECT_NAME}-${VERSION})
